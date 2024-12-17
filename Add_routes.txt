@@ -1,0 +1,20 @@
+#!/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+echo `date +"%d-%m-%Y %H:%M:%S"`' Script started for '$IFACE >> /var/log/add_routes.sh.lod
+
+if [ "$IFACE" != "eth0" -a "$IFACE" != "lo" ]; then
+    IP=`ip addr list $IFACE | grep "  inet " | head -n 1 | cut -d " " -f 6 | cut -d / -f 1`
+        NET=`ip addr list $IFACE | grep "  inet " | head -n 1 | cut -d " " -f 6 | cut -d / -f 1 | cut -d "." -f 3`
+        ROUT=`ip rout | grep "$IFACE  scope link" | wc -l`
+        GW="192.168.${NET}.1"
+        TABLE="route${NET}"
+    if [ "$ROUT" == 0 ]; then
+        ip route add 192.168.${NET}.0 dev $IFACE src 192.168.${NET}.100 table $TABLE
+        ip route add default via 192.168.${NET}.1 table $TABLE
+        ip route add 192.168.${NET}.0 dev $IFACE src 192.168.${NET}.100
+        ip rule add from 192.168.${NET}.100 table $TABLE
+    fi
+fi
+
+echo `date +"%d-%m-%Y %H:%M:%S"`' Script done for '$IFACE >> /var/log/add_routes.sh.lod
